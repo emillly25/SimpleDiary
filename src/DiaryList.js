@@ -1,17 +1,19 @@
-import DiaryItem from "./DiaryItem"
-const DiaryList = ({ diaryList }) => {
-    return (
-        <div className="DiaryList">
-            <h2>Log List</h2>
-            <div>
-                {diaryList.map(el => <DiaryItem key={el.id} {...el}/>)}
-            </div>
-        </div>
-    )
-}
+import DiaryItem from "./DiaryItem";
+const DiaryList = ({ diaryList, onDelete }) => {
+  return (
+    <div className="DiaryList">
+      <h2>Log List</h2>
+      <div>
+        {diaryList.map((el) => (
+          <DiaryItem key={el.id} {...el} onDelete={onDelete} />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 DiaryList.defaultProps = {
-    diaryList: [],
-}
+  diaryList: [],
+};
 
-export default DiaryList
+export default DiaryList;
