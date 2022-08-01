@@ -22,15 +22,23 @@ function App() {
     });
   };
 
-  const onDelete = (target_id) => {
+  const onRemove = (target_id) => {
     const newData = data.filter((el) => el.id !== target_id);
     setData(newData);
+  };
+
+  const onUpdate = (target_id, newContent) => {
+    setData(
+      data.map((el) =>
+        el.id === target_id ? { ...el, content: newContent } : el
+      )
+    );
   };
 
   return (
     <div className="App">
       <DiaryEditor onCreate={onCreate} />
-      <DiaryList diaryList={data} onDelete={onDelete} />
+      <DiaryList diaryList={data} onRemove={onRemove} onUpdate={onUpdate} />
     </div>
   );
 }
