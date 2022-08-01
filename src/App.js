@@ -1,17 +1,29 @@
-import './App.css';
-import DiaryEditor from './DiaryEditor';
-import DiaryList from './DiaryList';
+import "./App.css";
+import DiaryEditor from "./DiaryEditor";
+import DiaryList from "./DiaryList";
+import { useState, useRef } from "react";
 
 function App() {
-  const list =[
-    {id: 1, author:'emily', content: 'hi', emotion: 5, created_at: new Date().getTime()
-  },
-  {id: 2, author:'mily', content: 'hiiii', emotion: 4, created_at: new Date().getTime()
-}]
+  const [data, setData] = useState([]);
+  const dataId = useRef(0);
+  const onCreate = (author, content, emotion) => {
+    const created_date = new Date().getTime();
+    const newData = {
+      author,
+      content,
+      emotion,
+      created_date,
+      id: dataId.current,
+    };
+    dataId.current += 1;
+    setData((cur) => {
+      return [newData, ...cur];
+    });
+  };
   return (
     <div className="App">
-      <DiaryEditor/>
-      <DiaryList diaryList={list}/>
+      <DiaryEditor onCreate={onCreate} />
+      <DiaryList diaryList={data} />
     </div>
   );
 }
