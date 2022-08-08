@@ -1,10 +1,45 @@
 import "./App.css";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  useReducer,
+} from "react";
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INIT": {
+      return action.data;
+    }
+    case "CREATE": {
+      const created_date = new Date().getTime();
+      const newItem = { ...action.data, created_date };
+      return [newItem, ...state];
+    }
+    case "REMOVE": {
+      return state.filter((el) => el.id !== action.target_id);
+    }
+    case "UPDATE": {
+      return state.map((el) =>
+        el.id === action.target_id ? { ...el, content: action.newContent } : el
+      );
+    }
+    default:
+      return state;
+  }
+};
+
+//따로 contexct를 만들자!
+// -> Provider도 결국 컴포넌트기 떄문에 data가 변경되면 재랜더링이 되서 우리가 최적화 했던게 다 풀림
+//    그러므로 따로따로 감싸줘야함
+export const DiaryStateContext = React.createContext();
+export const DiaryDispatchContext = React.createContext();
 
 function App() {
-  const [data, setData] = useState([]);
+  const [data, dispatch] = useReducer(reducer, []);
   const dataId = useRef(0);
 
   const getData = async () => {
@@ -21,7 +56,7 @@ function App() {
         id: dataId.current++,
       };
     });
-    setData(initData);
+    dispatch({ type: "INIT", data: initData });
   };
 
   useEffect(() => {
@@ -29,30 +64,24 @@ function App() {
   }, []);
 
   const onCreate = useCallback((author, content, emotion) => {
-    const created_date = new Date().getTime();
-    const newData = {
-      author,
-      content,
-      emotion,
-      created_date,
-      id: dataId.current,
-    };
-    dataId.current += 1;
-    setData((cur) => {
-      return [newData, ...cur];
+    dispatch({
+      type: "CREATE",
+      data: { author, content, emotion, id: dataId.current },
     });
+    dataId.current += 1;
   }, []);
 
   const onRemove = useCallback((target_id) => {
-    setData((cur) => cur.filter((el) => el.id !== target_id));
+    dispatch({ type: "REMOVE", target_id });
   }, []);
 
   const onUpdate = useCallback((target_id, newContent) => {
-    setData((data) =>
-      data.map((el) =>
-        el.id === target_id ? { ...el, content: newContent } : el
-      )
-    );
+    dispatch({ type: "UPDATE", target_id, newContent });
+  }, []);
+
+  //왜 useMemo를 사용하는가? -> 그냥 하면 App 컴포넌트 재랜더링시 계속 다시 생성되니까 낭비
+  const memoizedDispatches = useMemo(() => {
+    return { onCreate, onRemove, onUpdate };
   }, []);
 
   //memoization 체크
@@ -66,14 +95,16 @@ function App() {
   const { goodCount, badCount, goodRatio } = getDiaryAnalysis;
 
   return (
-    <div className="App">
-      <DiaryEditor onCreate={onCreate} />
-      <div>전체일기: {data.length}</div>
-      <div>좋아: {goodCount}</div>
-      <div>싫어: {badCount}</div>
-      <div>좋아 비율: {goodRatio}</div>
-      <DiaryList diaryList={data} onRemove={onRemove} onUpdate={onUpdate} />
-    </div>
+    <DiaryStateContext.Provider value={data}>
+      <DiaryDispatchContext.Provider value={memoizedDispatches}>
+        <DiaryEditor />
+        <div>전체일기: {data.length}</div>
+        <div>좋아: {goodCount}</div>
+        <div>싫어: {badCount}</div>
+        <div>좋아 비율: {goodRatio}</div>
+        <DiaryList />
+      </DiaryDispatchContext.Provider>
+    </DiaryStateContext.Provider>
   );
 }
 

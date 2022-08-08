@@ -1,18 +1,8 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef, useContext } from "react";
+import { DiaryDispatchContext } from "./App";
 
-const DiaryItem = ({
-  id,
-  author,
-  content,
-  emotion,
-  created_at,
-  onRemove,
-  onUpdate,
-}) => {
-  useEffect(() => {
-    console.log(`${id}번째 아이템 랜더링`);
-  });
-
+const DiaryItem = ({ id, author, content, emotion, created_at }) => {
+  const { onRemove, onUpdate } = useContext(DiaryDispatchContext);
   const [isEdit, setIsEdit] = useState(false);
   const [localContent, setLocalContent] = useState(content);
   const localContentInputRef = useRef();
